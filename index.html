@@ -1,0 +1,803 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#05070b">
+  <title>CodeQuest | Coding Help for Kids</title>
+  <style>
+    :root {
+      --background: #05070b;
+      --text: #f2f8ff;
+      --muted: #a3b4c9;
+      --accent: #9ae5ff;
+      --border: #304252;
+      --success: #9af0c5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--background);
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    button {
+      font: inherit;
+      color: var(--text);
+      background: #0b1722;
+      border: 1px solid #678297;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    button:hover:not(:disabled),
+    button:focus-visible {
+      background: #193344;
+      border-color: var(--accent);
+    }
+
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    button:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 3px;
+    }
+
+    #app {
+      min-height: 100svh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      isolation: isolate;
+    }
+
+    .room {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(ellipse at 50% 34%,
+          #152332 0%, #080c13 52%, #020305 100%);
+      perspective: 850px;
+      overflow: hidden;
+    }
+
+    .room::before {
+      content: "";
+      position: absolute;
+      inset: 9% 9% 22%;
+      border: 1px solid #29394a;
+      box-shadow: inset 0 0 90px #000;
+      transform: perspective(800px) translateZ(-110px);
+    }
+
+    .room::after {
+      content: "";
+      position: absolute;
+      left: -30%;
+      width: 160%;
+      bottom: -46%;
+      height: 72%;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0 115px,
+          #1b3040 116px 117px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent 0 70px,
+          #1b3040 71px 72px
+        );
+      transform: perspective(400px) rotateX(65deg);
+      opacity: 0.35;
+    }
+
+    header, footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 24px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+
+    header strong { color: var(--accent); }
+
+    main {
+      flex: 1;
+      width: min(960px, 94%);
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .screen {
+      padding: clamp(24px, 6vw, 65px);
+      background: rgba(3, 9, 16, 0.85);
+      border: 1px solid var(--border);
+      box-shadow: 0 0 65px #0009;
+      min-height: 350px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      letter-spacing: 3px;
+      font-size: 12px;
+      margin-bottom: 25px;
+    }
+
+    h1, h2 {
+      font-size: clamp(25px, 4vw, 44px);
+      line-height: 1.2;
+      font-weight: 500;
+      margin: 0 0 24px;
+    }
+
+    p {
+      color: #d5e0ec;
+      line-height: 1.9;
+      font-size: clamp(14px, 1.6vw, 17px);
+      max-width: 760px;
+    }
+
+    code {
+      color: var(--accent);
+      overflow-wrap: anywhere;
+    }
+
+    .progress {
+      display: flex;
+      gap: 7px;
+      margin: 32px 0;
+    }
+
+    .dot {
+      height: 3px;
+      flex: 1;
+      background: #304252;
+    }
+
+    .dot.active { background: var(--accent); }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .primary {
+      background: #d6f3ff;
+      color: #071018;
+      border-color: #d6f3ff;
+    }
+
+    .primary:hover:not(:disabled) {
+      color: white;
+    }
+
+    .hidden { display: none !important; }
+
+    .game-intro { text-align: center; }
+    .game-intro p { margin: 0 auto 20px; }
+
+    .arena {
+      position: relative;
+      width: 100%;
+      height: min(49vh, 400px);
+      min-height: 260px;
+      border: 1px solid #3a556a;
+      background:
+        linear-gradient(#15223326 1px, transparent 1px),
+        linear-gradient(90deg, #15223326 1px, transparent 1px),
+        radial-gradient(ellipse, #102332 0%, #050a0e 75%);
+      background-size: 38px 38px, 38px 38px, auto;
+      overflow: hidden;
+    }
+
+    .avatar {
+      position: absolute;
+      width: 23px;
+      height: 23px;
+      border-radius: 50%;
+      background: #edfaff;
+      box-shadow: 0 0 18px #a4eaff;
+      transform: translate(-50%, -50%);
+      transition: left 0.065s, top 0.065s;
+      z-index: 2;
+    }
+
+    .pickup {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      padding: 12px 8px;
+      min-width: 96px;
+      max-width: 38%;
+      text-align: center;
+      font-size: clamp(10px, 1.4vw, 14px);
+      color: #ecfaff;
+      background: #0c2339;
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 20px #4093c644;
+      animation: float 2.4s ease-in-out infinite;
+      overflow-wrap: anywhere;
+    }
+
+    .pickup.collected { display: none; }
+
+    @keyframes float {
+      0%, 100% { margin-top: 0; }
+      50% { margin-top: -7px; }
+    }
+
+    .game-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-top: 16px;
+    }
+
+    .movement {
+      display: grid;
+      grid-template-columns: repeat(3, 45px);
+      grid-template-rows: repeat(2, 43px);
+      gap: 4px;
+    }
+
+    .movement button { padding: 7px; }
+    [data-direction="up"] { grid-column: 2; }
+    [data-direction="left"] { grid-column: 1; grid-row: 2; }
+    [data-direction="down"] { grid-column: 2; grid-row: 2; }
+    [data-direction="right"] { grid-column: 3; grid-row: 2; }
+
+    .status { color: var(--accent); }
+
+    .slots {
+      min-height: 85px;
+      padding: 15px;
+      border: 1px dashed #52718a;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+
+    .slot {
+      padding: 10px;
+      background: #142b3c;
+      border: 1px solid #45647a;
+      color: var(--accent);
+      overflow-wrap: anywhere;
+    }
+
+    .pieces {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      border-left: 3px solid var(--accent);
+      background: #07131f;
+      white-space: pre-wrap;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+    }
+
+    .result.success { color: var(--success); }
+    .result.error { color: #ffb8b8; }
+
+    .global-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 10px 0 20px;
+    }
+
+    footer {
+      font-size: 10px;
+      margin-top: auto;
+    }
+
+    @media (max-width: 600px) {
+      header, footer { padding: 15px; }
+      .screen { padding: 25px 18px; }
+      .game-controls { align-items: flex-start; }
+      .pickup { padding: 9px 5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <div class="room" aria-hidden="true"></div>
+
+  <header>
+    <strong>CODE_QUEST // JAVA_01</strong>
+    <span id="phase">SYSTEM ONLINE</span>
+  </header>
+
+  <main>
+    <section id="lesson" class="screen" aria-live="polite"></section>
+
+    <section id="game" class="hidden">
+      <div class="game-intro">
+        <div class="eyebrow">INTERACTIVE MISSION</div>
+        <h2>COLLECT THE CODE_</h2>
+        <p>
+          Move with WASD, arrow keys, or the direction buttons.
+          Collect all three pieces of your Java instruction.
+        </p>
+      </div>
+
+      <div id="arena" class="arena" tabindex="0"
+           aria-label="Interactive code collection game">
+        <div id="avatar" class="avatar"></div>
+      </div>
+
+      <div class="game-controls">
+        <span id="status" class="status">COLLECTED 0 / 3</span>
+        <button id="buildButton" class="primary" disabled>
+          BUILD INSTRUCTION →
+        </button>
+        <div class="movement" aria-label="Movement controls">
+          <button data-direction="up" aria-label="Move up">↑</button>
+          <button data-direction="left" aria-label="Move left">←</button>
+          <button data-direction="down" aria-label="Move down">↓</button>
+          <button data-direction="right" aria-label="Move right">→</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="builder" class="screen hidden" aria-live="polite">
+      <div class="eyebrow">ASSEMBLY STATION // JAVA</div>
+      <h2>BUILD YOUR FIRST INSTRUCTION_</h2>
+      <p>
+        Select each code piece in the correct order.
+        Together they create a Java print statement.
+      </p>
+
+      <div id="slots" class="slots"></div>
+      <div id="pieces" class="pieces"></div>
+
+      <div class="actions">
+        <button id="undoButton">UNDO</button>
+        <button id="resetButton">RESET</button>
+        <button id="runButton" class="primary">CHECK & RUN →</button>
+      </div>
+
+      <div id="output" class="result hidden" role="status"></div>
+    </section>
+
+    <nav class="global-nav" aria-label="Lesson controls">
+      <button id="backButton">← BACK</button>
+      <button id="restartButton">↻ RESTART</button>
+    </nav>
+  </main>
+
+  <footer>
+    <span>LEARN → COLLECT → BUILD → RUN</span>
+    <span>CODING HELP FOR KIDS</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+const slides = [
+  {
+    tag: "WELCOME // LESSON 00",
+    title: "WELCOME TO CODE QUEST_",
+    body: `Today we will learn how computers follow
+    instructions, discover how Java works, and build our
+    very first Java message: <code>Hello, World!</code>`,
+    button: "START LESSON →"
+  },
+  {
+    tag: "LESSON 01 // COMMUNICATION",
+    title: "WE ALL SPEAK A LANGUAGE_",
+    body: `People use different languages to share ideas
+    and understand one another. Computers also need
+    instructions written in a language they can work with.
+    Programming allows us to communicate those instructions.`
+  },
+  {
+    tag: "LESSON 02 // WHAT IS CODE",
+    title: "WHAT IS CODE?",
+    body: `Code is a set of instructions written for a computer.
+    Think of following a recipe or directions to build something.
+    Every step tells you what to do next. Computers follow
+    instructions to complete tasks and produce results.`
+  },
+  {
+    tag: "LESSON 03 // MEET JAVA",
+    title: "MEET JAVA_",
+    body: `Java is one programming language we can use to write
+    instructions for computers. Spoken languages have grammar,
+    and programming languages have rules too. Those rules
+    are called <code>syntax</code>.`
+  },
+  {
+    tag: "LESSON 04 // OUR MISSION",
+    title: "SAY HELLO, WORLD!",
+    body: `Our goal is to display a message using Java.
+    We will create a print statement, which tells a program
+    to display text in its output.
+    <code>System.out.println("Hello, World!");</code>`
+  },
+  {
+    tag: "LESSON 05 // INPUT AND OUTPUT",
+    title: "INPUT → INSTRUCTION → OUTPUT_",
+    body: `First, we provide information, such as the text
+    <code>"Hello, World!"</code>. Next, a Java instruction
+    tells the computer what to do with that information.
+    Finally, the console displays our output:
+    <code>Hello, World!</code>`
+  },
+  {
+    tag: "LESSON 06 // BREAK IT DOWN",
+    title: "HOW DOES PRINTLN WORK?",
+    body: `<code>System</code> is a Java class.
+    <code>out</code> represents standard output.
+    <code>println</code> prints a line of text.
+    Parentheses hold our message, quotation marks identify
+    the text, and the semicolon ends our instruction.`
+  },
+  {
+    tag: "LESSON 07 // PUT IT TOGETHER",
+    title: "BUILD A COMPLETE INSTRUCTION_",
+    body: `Our instruction has three pieces:
+    <code>System.out</code>,
+    <code>.println(</code>, and
+    <code>"Hello, World!");</code>.
+    When we put them together correctly, we create a complete
+    Java print statement. In a Java application, this statement
+    can go inside the <code>main</code> method.`
+  },
+  {
+    tag: "YOUR TURN // GAME",
+    title: "ENTER THE CODE ROOM_",
+    body: `Now it is your turn. Move your character around the
+    room and collect all three glowing code pieces.
+    Once you have collected them, build the instruction
+    in the correct order and check your answer.`,
+    button: "ENTER GAME →"
+  }
+];
+
+const elements = {
+  lesson: document.getElementById("lesson"),
+  game: document.getElementById("game"),
+  builder: document.getElementById("builder"),
+  phase: document.getElementById("phase"),
+  arena: document.getElementById("arena"),
+  avatar: document.getElementById("avatar"),
+  status: document.getElementById("status"),
+  buildButton: document.getElementById("buildButton"),
+  slots: document.getElementById("slots"),
+  pieces: document.getElementById("pieces"),
+  output: document.getElementById("output")
+};
+
+const codePieces = [
+  { id: 0, text: "System.out", x: 20, y: 25 },
+  { id: 1, text: ".println(", x: 77, y: 29 },
+  { id: 2, text: '"Hello, World!");', x: 50, y: 77 }
+];
+
+let currentSlide = 0;
+let currentView = "lesson";
+let player = { x: 50, y: 50 };
+let collected = new Set();
+let selected = [];
+
+function setView(view) {
+  currentView = view;
+
+  elements.lesson.classList.toggle("hidden", view !== "lesson");
+  elements.game.classList.toggle("hidden", view !== "game");
+  elements.builder.classList.toggle("hidden", view !== "builder");
+}
+
+function showSlide() {
+  setView("lesson");
+
+  const slide = slides[currentSlide];
+  elements.phase.textContent =
+    `LESSON ${String(currentSlide + 1).padStart(2, "0")} / ${slides.length}`;
+
+  elements.lesson.innerHTML = `
+    <div class="eyebrow">${slide.tag}</div>
+    <h1>${slide.title}</h1>
+    <p>${slide.body}</p>
+
+    <div class="progress" aria-label="Lesson progress">
+      ${slides.map((_, index) =>
+        `<span class="dot ${index <= currentSlide ? "active" : ""}"></span>`
+      ).join("")}
+    </div>
+
+    <div class="actions">
+      ${currentSlide > 0
+        ? '<button id="lessonBack">← BACK</button>'
+        : ""}
+      <button id="lessonNext" class="primary">
+        ${slide.button || "NEXT →"}
+      </button>
+    </div>
+  `;
+
+  document.getElementById("lessonNext").onclick = () => {
+    if (currentSlide === slides.length - 1) {
+      startGame();
+    } else {
+      currentSlide++;
+      showSlide();
+    }
+  };
+
+  const back = document.getElementById("lessonBack");
+  if (back) {
+    back.onclick = () => {
+      currentSlide--;
+      showSlide();
+    };
+  }
+}
+
+function resetGame() {
+  player = { x: 50, y: 50 };
+  collected.clear();
+  selected = [];
+
+  elements.arena.querySelectorAll(".pickup").forEach(node => node.remove());
+
+  codePieces.forEach(piece => {
+    const node = document.createElement("div");
+    node.className = "pickup";
+    node.dataset.piece = piece.id;
+    node.textContent = piece.text;
+    node.style.left = piece.x + "%";
+    node.style.top = piece.y + "%";
+    elements.arena.appendChild(node);
+  });
+
+  elements.status.textContent = "COLLECTED 0 / 3";
+  elements.buildButton.disabled = true;
+  renderPlayer();
+}
+
+function startGame() {
+  resetGame();
+  setView("game");
+  elements.phase.textContent = "COLLECTION ACTIVE";
+  elements.arena.focus();
+}
+
+function renderPlayer() {
+  elements.avatar.style.left = player.x + "%";
+  elements.avatar.style.top = player.y + "%";
+}
+
+function move(direction) {
+  if (currentView !== "game") return;
+
+  const step = 4;
+
+  if (direction === "up") player.y -= step;
+  if (direction === "down") player.y += step;
+  if (direction === "left") player.x -= step;
+  if (direction === "right") player.x += step;
+
+  player.x = Math.max(4, Math.min(96, player.x));
+  player.y = Math.max(5, Math.min(95, player.y));
+
+  renderPlayer();
+  checkCollection();
+}
+
+function checkCollection() {
+  codePieces.forEach(piece => {
+    if (collected.has(piece.id)) return;
+
+    const distance = Math.hypot(
+      player.x - piece.x,
+      player.y - piece.y
+    );
+
+    if (distance < 10) {
+      collected.add(piece.id);
+
+      const node = elements.arena.querySelector(
+        `[data-piece="${piece.id}"]`
+      );
+
+      if (node) node.classList.add("collected");
+    }
+  });
+
+  elements.status.textContent =
+    `COLLECTED ${collected.size} / ${codePieces.length}`;
+
+  if (collected.size === codePieces.length) {
+    elements.buildButton.disabled = false;
+    elements.status.textContent = "ALL CODE COLLECTED ✓";
+  }
+}
+
+document.addEventListener("keydown", event => {
+  if (currentView !== "game") return;
+
+  const directions = {
+    ArrowUp: "up",
+    ArrowDown: "down",
+    ArrowLeft: "left",
+    ArrowRight: "right",
+    w: "up",
+    s: "down",
+    a: "left",
+    d: "right"
+  };
+
+  const direction = directions[event.key] ||
+    directions[event.key.toLowerCase()];
+
+  if (direction) {
+    event.preventDefault();
+    move(direction);
+  }
+});
+
+document.querySelectorAll("[data-direction]").forEach(button => {
+  button.addEventListener("click", () => {
+    move(button.dataset.direction);
+  });
+});
+
+elements.buildButton.onclick = () => {
+  if (collected.size !== codePieces.length) return;
+
+  setView("builder");
+  elements.phase.textContent = "ASSEMBLY STATION";
+  renderBuilder();
+};
+
+function hideOutput() {
+  elements.output.className = "result hidden";
+  elements.output.textContent = "";
+}
+
+function renderBuilder() {
+  elements.slots.replaceChildren();
+  elements.pieces.replaceChildren();
+
+  if (selected.length === 0) {
+    const hint = document.createElement("span");
+    hint.textContent = "Select your first code piece below...";
+    hint.style.color = "var(--muted)";
+    elements.slots.appendChild(hint);
+  }
+
+  selected.forEach(id => {
+    const slot = document.createElement("span");
+    slot.className = "slot";
+    slot.textContent = codePieces[id].text;
+    elements.slots.appendChild(slot);
+  });
+
+  // Display unselected pieces in a different order.
+  [2, 0, 1].forEach(id => {
+    if (selected.includes(id)) return;
+
+    const button = document.createElement("button");
+    button.textContent = codePieces[id].text;
+
+    button.onclick = () => {
+      selected.push(id);
+      hideOutput();
+      renderBuilder();
+    };
+
+    elements.pieces.appendChild(button);
+  });
+}
+
+document.getElementById("undoButton").onclick = () => {
+  selected.pop();
+  hideOutput();
+  renderBuilder();
+};
+
+document.getElementById("resetButton").onclick = () => {
+  selected = [];
+  hideOutput();
+  renderBuilder();
+};
+
+document.getElementById("runButton").onclick = () => {
+  const output = elements.output;
+  output.classList.remove("hidden");
+
+  if (selected.length !== codePieces.length) {
+    output.className = "result error";
+    output.textContent =
+      "Not finished yet. Select all three pieces.";
+    return;
+  }
+
+  const correct = selected.every((id, index) => id === index);
+
+  if (!correct) {
+    output.className = "result error";
+    output.textContent =
+      "The pieces are not in the correct order.\n\n" +
+      "Hint: Start with System.out, then println, then the message.";
+    return;
+  }
+
+  const statement = codePieces.map(piece => piece.text).join("");
+
+  output.className = "result success";
+  output.textContent =
+    "MISSION COMPLETE ✓\n\n" +
+    "Java instruction:\n" +
+    statement + "\n\n" +
+    "Expected console output:\n" +
+    "Hello, World!\n\n" +
+    "You built your first Java print statement!\n\n" +
+    "Next challenge: Change the message to your own name.\n\n" +
+    "This game checks the statement and demonstrates its " +
+    "expected output. Java is not compiled in the browser.";
+
+  elements.phase.textContent = "MISSION COMPLETE";
+};
+
+document.getElementById("backButton").onclick = () => {
+  if (currentView === "builder") {
+    setView("game");
+    elements.phase.textContent = "COLLECTION COMPLETE";
+  } else if (currentView === "game") {
+    currentSlide = slides.length - 1;
+    showSlide();
+  } else if (currentSlide > 0) {
+    currentSlide--;
+    showSlide();
+  }
+};
+
+document.getElementById("restartButton").onclick = () => {
+  currentSlide = 0;
+  resetGame();
+  showSlide();
+};
+
+showSlide();
+</script>
+</body>
+</html>
